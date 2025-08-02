@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brainf**k Game Engine</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Brainf**k Game Engine</h1>
+        <div class="controls">
+            <button id="run-btn">Run</button>
+            <button id="reset-btn">Reset</button>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.98em;">
+                <input type="checkbox" id="game-mode-toggle" checked>
+                Game Mode
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.98em;">
+                <input type="checkbox" id="color-screen-toggle" checked>
+                Color screen
+            </label>
+        </div>
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="code-tab">Code</button>
+            <button class="tab-btn" data-tab="memory-tab">Memory</button>
+            <button class="tab-btn" data-tab="tutorial-tab">Tutorial</button>
+            <button class="tab-btn" data-tab="examples-tab">Examples</button>
+        </div>
+        <div class="tab-content">
+            <div id="code-tab" class="tab active">
+                <div class="editor-section">
+                    <label for="bf-editor">Code Editor:</label>
+                    <pre id="bf-editor" contenteditable="true" spellcheck="false" class="editor"></pre>
+                </div>
+                <div id="output-section" class="output-section">
+                    <label for="bf-output">Output:</label>
+                    <textarea id="bf-output" readonly></textarea>
+                    <label for="bf-input">Input:</label>
+                    <input id="bf-input" type="text" placeholder="Input for , command">
+                </div>
+                <div id="game-screen-section" class="screen-section" style="display:none;">
+                    <h2>Screen (16x16)</h2>
+                    <canvas id="screen" width="320" height="320"></canvas>
+                    <div style="display: flex; flex-direction: column;">
+                        <label for="screen-input">Input:</label>
+                        <input id="screen-input" type="text" placeholder="Input for , command" style="flex: 1;">
+                    </div>
+                </div>
+            </div>
+            <div id="memory-tab" class="tab">
+                <div class="memory-section">
+                    <h2 style="margin-bottom: 4px;">Memory</h2>
+                    <span style="color: gray;">Only first 2048 cells are shown.</span>
+                    <div id="memory-view" class="scrollable-memory" style="margin-top: 8px;"></div>
+                </div>
+            </div>
+            <div id="tutorial-tab" class="tab">
+                <div class="tutorial-section">
+                    <h2>Brainf**k Tutorial</h2>
+                    <p><b>Brainf**k</b> is a programming language with only 8 commands:</p>
+                    <ul>
+                        <li><code class="bf-code">&gt;</code> Move pointer right</li>
+                        <li><code class="bf-code">&lt;</code> Move pointer left</li>
+                        <li><code class="bf-code">+</code> Increment memory at pointer</li>
+                        <li><code class="bf-code">-</code> Decrement memory at pointer</li>
+                        <li><code class="bf-code">.</code> Output character at pointer</li>
+                        <li><code class="bf-code">,</code> Input character to pointer (from Input)</li>
+                        <li><code class="bf-code">[</code> Jump forward past matching <code class="bf-code">]</code> if memory at pointer is 0</li>
+                        <li><code class="bf-code">]</code> Jump back to matching <code class="bf-code">[</code> if memory at pointer is not 0</li>
+                    </ul>
+                    <h3>How to Use This UI</h3>
+                    <ul>
+                        <li>Write Brainf**k code in the <b>Code</b> tab.</li>
+                        <li>Click <b>Run</b> to execute, <b>Stop</b> to halt, <b>Reset</b> to clear memory/output/screen.</li>
+                        <li>Use the <b>Input</b> field for <code class="bf-code">,</code> commands</li>
+                        <li>View memory in the <b>Memory</b> tab.</li>
+                        <li><b>Game Mode</b>: When enabled, the first 256 memory cells are visualized as a 16x16 pixel screen (see below). The <code class="bf-code">.</code> command updates the screen, instead of printing a character to the output.</li>
+                        <li>When Game Mode is off, <code class="bf-code">.</code> prints to the output.</li>
+                        <li>When <b>Color Screen</b> is enabled, the screen is colored (see below), else the screen is grayscale (0 - 255).</li>
+                    </ul>
+                    <h3>Colors Legend</h3>
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:0.98em;color:#bbb;margin-bottom:5px;">Each value (0-255) is mapped to a unique color: 16 hues × 16 brightnesses.<br>Hue = value % 16, Brightness = value / 16. Used for Color Screen mode.</div>
+                        <div style="display: flex; justify-content: center;">
+                            <div id="color-legend-grid" style="display: flex; flex-wrap: wrap; max-width: calc(16 * 19.19px);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="examples-tab" class="tab">
+                <h2>Brainf**k Examples</h2>
+                <div class="example">
+                    <h3>Hello World</h3>
+                    <pre class="bf-code">++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.</pre>
+                    <p>Prints "Hello World!" to the output.</p>
+                </div>
+                <!-- <div class="example">
+                    <h3>Fill the screen with all colors</h3>
+                    <pre class="bf-code"></pre>
+                    <p>Fills the first 256 memory cells with values 0 to 255 (for visualizing the full color palette in Game Mode).</p>
+                </div> -->
+            </div>
+        </div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
