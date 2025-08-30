@@ -31,7 +31,9 @@
             <div id="code-tab" class="tab active">
                 <div class="editor-section">
                     <label for="bf-editor">Code Editor:</label>
-                    <pre id="bf-editor" contenteditable="true" spellcheck="false" class="editor"></pre>
+                    <div class="editor-container">
+                        <textarea id="bf-editor" spellcheck="false" class="editor" placeholder="Enter your Brainf**k code here..."></textarea>
+                    </div>
                 </div>
                 <div id="output-section" class="output-section">
                     <label for="bf-output">Output:</label>
@@ -92,13 +94,123 @@
                 <h2>Brainf**k Examples</h2>
                 <div class="example">
                     <h3>Hello World</h3>
-                    <pre class="bf-code">++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.</pre>
+                    <button class="reveal-code-btn">Show Code</button>
+                    <pre class="bf-code" style="display: none;">++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.</pre>
                     <p>Prints "Hello World!" to the output.</p>
                 </div>
-                <!-- <div class="example">
+                <div class="example">
                     <h3>Fill the screen with all colors</h3>
-                    <pre class="bf-code"></pre>
+                    <button class="reveal-code-btn">Show Code</button>
+                    <pre class="bf-code" style="display: none;">>+  // Move to 2nd pixel and set it to 1
+
+[   // Loop until value at pointer is 0
+    [->+>+<<] // Copy value at pointer to next two cells
+    >>[-<<+>>]< // Move value back to this cell
+    +. // Increment next cell and draw the screen
+]</pre>
                     <p>Fills the first 256 memory cells with values 0 to 255 (for visualizing the full color palette in Game Mode).</p>
+                </div>
+                <!-- Challenge Examples (no implementation, just name and description) -->
+                <div class="example">
+                    <h3>Reverse Input</h3>
+                    <button class="reveal-code-btn">Show Code</button>
+                    <pre class="bf-code" style="display: none;">,[>,] // Load the string into memory one char at a time
+<[.<] // Print the string in reverse order</pre>
+                    <p>Reads a string from input and prints it in reverse order.</p>
+                </div>
+                <div class="example">
+                    <h3>"The Parrot"</h3>
+                    <button class="reveal-code-btn">Show Code</button>
+                    <pre class="bf-code" style="display: none;"><+ // Set up infinite Loop
+[>
+    , // Read character from input
+    [.>] // If it isn't 0 output it and move to a cell with 0 value
+<]</pre>
+                    <p>Says the same thing back to you. (Don't run in game mode)</p>
+                </div>
+                <div class="example">
+                    <h3>Draw a Diagonal Line</h3>
+                    <button class="reveal-code-btn">Show Code</button>
+                    <pre class="bf-code" style="display: none;">++++++++++++++++ // Set the length of the diagonal line
+[   // Repeat until reached required number of pixels (length)
+    [->+>>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<] // Copy current pixel to the next diagonal pixel and leave a copy
+    >[-<+>] // Restore the copy to the original pixel
+    >>>>>>>>>>>>>>>>- // Move to the next diagonal pixel and subtract by one
+]
+<<<<<<<<<<<<<<<<< // Move back to last pixel
+[   // Repeat until we are back at the beginning
+    [-]- // Set the current pixel to 0 and then to 255
+    <<<<<<<<<<<<<<<<<
+]</pre>
+                    <p>Draws a diagonal line on the 16x16 screen in Game Mode.</p>
+                </div>
+                <div class="example">
+                    <h3>Draw a Circle</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Draws a circle on the 16x16 screen in Game Mode.</p>
+                </div>
+                <div class="example">
+                    <h3>Draw a Checkerboard Pattern</h3>
+                    <button class="reveal-code-btn">Show Code</button>
+                    <pre class="bf-code" style="display: none;">++++++++ // Set number of double rows
+[   // Loop until double row count is 0
+    [->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<] // Copy double row count to next row
+    ->>->>->>->>->>->>->>->>> // Draw first row
+    ->>->>->>->>->>->>->>-> // Draw second row
+    - // Subtract from the double row count
+]</pre>
+                    <p>Fills the screen with a checkerboard pattern in Game Mode.</p>
+                </div>
+                <div class="example">
+                    <h3>A dot that moves with WASD</h3>
+                    <!-- <button class="reveal-code-btn">Show Code</button> -->
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Moves a dot around the screen using the WASD keys.</p>
+                </div>
+                <!-- <div class="example">
+                    <h3>Draw a Spiral</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Draws a spiral pattern on the screen in Game Mode.</p>
+                </div>
+                <div class="example">
+                    <h3>Draw a Gradient</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Fills the screen with a horizontal or vertical gradient in Game Mode.</p>
+                </div>
+                <div class="example">
+                    <h3>Draw a Smiley Face</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Draws a smiley face on the 16x16 screen in Game Mode.</p>
+                </div>
+                <div class="example">
+                    <h3>Prime Number Checker</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Checks if the input number is prime and outputs "Yes" or "No".</p>
+                </div>
+                <div class="example">
+                    <h3>Fibonacci Sequence</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Generates and prints the first N Fibonacci numbers (N from input).</p>
+                </div>
+                <div class="example">
+                    <h3>Sort Three Numbers</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Reads three numbers from input and prints them in sorted order.</p>
+                </div>
+                <div class="example">
+                    <h3>Palindrome Detector</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Checks if the input string is a palindrome and outputs "Yes" or "No".</p>
+                </div>
+                <div class="example">
+                    <h3>Calculate Factorial</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Reads a number from input and prints its factorial.</p>
+                </div>
+                <div class="example">
+                    <h3>Bubble Sort</h3>
+                    <pre class="bf-code">(Not yet solved 😒)</pre>
+                    <p>Sorts an array of numbers using the bubble sort algorithm.</p>
                 </div> -->
             </div>
         </div>

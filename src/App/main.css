@@ -72,29 +72,81 @@ h1, h2 {
 .editor-section {
     margin-bottom: 16px;
 }
+
+.editor-container {
+    position: relative;
+    display: block;
+}
+
 .editor {
     background: #111;
-    color: #888;
+    color: #e6e6e6;
     border: 1px solid #444;
     border-radius: 6px;
     min-height: 80px;
     max-height: 600px;
     overflow-y: auto;
+    overflow-x: auto;
     font-family: 'Fira Mono', 'Consolas', monospace;
     font-size: 1.1em;
     padding: 10px;
     outline: none;
-    white-space: pre-wrap;
-    word-break: break-all;
+    white-space: pre;
+    word-break: normal;
     resize: vertical;
+    width: 100%;
+    box-sizing: border-box;
+    line-height: 1.4;
+    tab-size: 4;
+}
+
+.editor:focus {
+    border-color: #ffb347;
+    box-shadow: 0 0 0 2px rgba(255, 179, 71, 0.2);
+    outline: none;
+}
+
+.editor::selection {
+    background-color: rgba(255, 179, 71, 0.3);
+    color: #fff;
+}
+
+.editor::-moz-selection {
+    background-color: rgba(255, 179, 71, 0.3);
+    color: #fff;
+}
+
+.highlight-overlay {
+    font-family: 'Fira Mono', 'Consolas', monospace;
+    font-size: 1.1em;
+    line-height: 1.4;
+    tab-size: 4;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 0;
+    overflow: hidden;
+    white-space: pre;
+    word-break: normal;
+    box-sizing: border-box;
+    background: #111; /* Same as editor background */
+    color: #666; /* Default text color for non-BF commands */
 }
 .bf-code {
     background: #333;
-    color: #ffb347;
+    color: #666;
+    font-weight: bold;
+    font-family: 'Fira Mono', 'Consolas', monospace;
     padding: 4px;
     border-radius: 6px;
     overflow-x: auto;
 }
+
+.example .bf-code:hover {
+    background: #444;
+    transform: translateY(-1px);
+}
+
 .bf-cmd {
     color: #ffb347;
     font-weight: bold;
@@ -197,4 +249,26 @@ button.stop, button.stop:hover {
 }
 .example h3 {
     margin-top: 0;
+}
+
+.reveal-code-btn {
+    background: #333;
+    color: #666;
+    font-weight: bold;
+    font-family: 'Fira Mono', 'Consolas', monospace;
+    padding: 4px;
+    border-radius: 6px;
+    overflow-x: auto;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 10px;
+    display: block;
+    width: 100%;
+    text-align: center;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.reveal-code-btn:hover {
+    background: #444;
+    transform: translateY(-1px);
 }

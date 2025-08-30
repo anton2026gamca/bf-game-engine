@@ -21,13 +21,16 @@ let input = '';
 let isRunning = false;
 let stopRequested = false;
 
-function resetState() {
+function resetState(resetInputs = true) {
     memory = new Uint8Array(memorySize);
     pointer = 0;
     output = '';
     input = '';
     outputArea.value = '';
-    inputField.value = '';
+    if (resetInputs) {
+        inputField.value = '';
+        screenInput.value = '';
+    }
     renderMemory();
     renderScreen();
 }
@@ -66,67 +69,125 @@ function renderScreen() {
     }
 }
 
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Add this helper (anywhere above highlightSyntax)
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+}
+
+// Replace your highlightSyntax with this safe version
 function highlightSyntax(code, activeIndex = -1) {
-    let result = '';
-    let bfIndex = 0;
-    for (let i = 0; i < code.length; i++) {
-        const ch = code[i];
-        if (/[\+\-\[\]<>.,]/.test(ch)) {
-            if (bfIndex === activeIndex) {
-                result += `<span class="bf-cmd bf-cmd-active">${ch}</span>`;
-            } else {
-                result += `<span class="bf-cmd">${ch}</span>`;
-            }
-            bfIndex++;
-        } else {
-            result += ch;
-        }
+  let result = '';
+  let bfIndex = 0;
+
+  for (let i = 0; i < code.length; i++) {
+    const ch = code[i];
+    const isCmd = /[+\-\[\]<>.,]/.test(ch);
+    const esc = escapeHtml(ch);
+
+    if (isCmd) {
+      const cls = (bfIndex === activeIndex) ? 'bf-cmd bf-cmd-active' : 'bf-cmd';
+      result += `<span class="${cls}">${esc}</span>`;
+      bfIndex++;
+    } else {
+      result += esc;
     }
-    return result;
+  }
+  return result;
+}
+
+let lastHighlightedContent = '';
+let highlightOverlay = null;
+
+function createHighlightOverlay() {
+    if (!highlightOverlay) {
+        const container = editor.parentNode;
+        
+        highlightOverlay = document.createElement('div');
+        highlightOverlay.className = 'highlight-overlay';
+        
+        highlightOverlay.style.position = 'absolute';
+        highlightOverlay.style.top = '0';
+        highlightOverlay.style.left = '0';
+        highlightOverlay.style.right = '0';
+        highlightOverlay.style.bottom = '0';
+        highlightOverlay.style.pointerEvents = 'none';
+        highlightOverlay.style.whiteSpace = 'pre';
+        highlightOverlay.style.overflow = 'hidden';
+        highlightOverlay.style.zIndex = '1';
+        highlightOverlay.style.color = '#666';
+        
+        const computedStyle = window.getComputedStyle(editor);
+        highlightOverlay.style.fontFamily = computedStyle.fontFamily;
+        highlightOverlay.style.fontSize = computedStyle.fontSize;
+        highlightOverlay.style.lineHeight = computedStyle.lineHeight;
+        highlightOverlay.style.padding = computedStyle.padding;
+        highlightOverlay.style.border = computedStyle.border;
+        highlightOverlay.style.borderColor = 'transparent';
+        highlightOverlay.style.borderRadius = computedStyle.borderRadius;
+        highlightOverlay.style.margin = computedStyle.margin;
+        highlightOverlay.style.boxSizing = computedStyle.boxSizing;
+        
+        container.style.position = 'relative';
+        container.appendChild(highlightOverlay);
+        
+        editor.style.position = 'relative';
+        editor.style.zIndex = '2';
+        editor.style.background = 'transparent';
+        editor.style.color = 'rgba(230, 230, 230, 0.1)';
+        editor.style.caretColor = '#e6e6e6';
+        
+        const syncScroll = () => {
+            highlightOverlay.scrollTop = editor.scrollTop;
+            highlightOverlay.scrollLeft = editor.scrollLeft;
+        };
+        
+        editor.addEventListener('scroll', syncScroll);
+        
+        setTimeout(syncScroll, 0);
+    }
 }
 
 function updateEditorHighlighting() {
-    const selection = window.getSelection();
-    let caretOffset = 0;
-    if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const preCaretRange = range.cloneRange();
-        preCaretRange.selectNodeContents(editor);
-        preCaretRange.setEnd(range.endContainer, range.endOffset);
-        caretOffset = preCaretRange.toString().length;
+    const text = editor.value || '';
+    
+    if (text === lastHighlightedContent) {
+        return;
     }
-    const text = editor.innerText;
-    editor.innerHTML = highlightSyntax(text);
-    setCaretPosition(editor, caretOffset);
-}
-
-function setCaretPosition(el, offset) {
-    el.focus();
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
-    let currentNode = null;
-    let currentOffset = 0;
-    while (walker.nextNode()) {
-        const node = walker.currentNode;
-        if (currentOffset + node.length >= offset) {
-            currentNode = node;
-            break;
-        }
-        currentOffset += node.length;
+    
+    lastHighlightedContent = text;
+    
+    if (!highlightOverlay) {
+        createHighlightOverlay();
     }
-    if (currentNode) {
-        const sel = window.getSelection();
-        const range = document.createRange();
-        range.setStart(currentNode, offset - currentOffset);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
+    
+    if (text.length > 10000) {
+        highlightOverlay.innerHTML = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return;
     }
+    
+    highlightOverlay.innerHTML = highlightSyntax(text);
 }
 
 function placeCaretAtEnd(el) {
     el.focus();
-    if (typeof window.getSelection != "undefined"
-        && typeof document.createRange != "undefined") {
+    if (el.setSelectionRange) {
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+    } else if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
         let range = document.createRange();
         range.selectNodeContents(el);
         range.collapse(false);
@@ -137,8 +198,11 @@ function placeCaretAtEnd(el) {
 }
 
 function setEditorHighlightAt(bfIndex) {
-    const text = editor.innerText;
-    editor.innerHTML = highlightSyntax(text, bfIndex);
+    if (!highlightOverlay) {
+        createHighlightOverlay();
+    }
+    const text = editor.value || '';
+    highlightOverlay.innerHTML = highlightSyntax(text, bfIndex);
 }
 
 function updateGameModeUI() {
@@ -250,6 +314,69 @@ async function runBrainfuck(code, gameMode = false) {
     runBtn.classList.remove('stop');
 }
 
+function highlightBfCodeElements() {
+    document.querySelectorAll('.bf-code').forEach(pre => {
+        const originalCode = pre.textContent || pre.innerText;
+        pre.innerHTML = highlightSyntax(originalCode);
+    });
+}
+
+function setupExampleClickHandlers() {
+    document.querySelectorAll('.example pre.bf-code').forEach(pre => {
+        const code = pre.textContent || pre.innerText;
+        if (!code.includes('(Not yet solved')) {
+            pre.style.cursor = 'pointer';
+            pre.title = 'Click to load this example into the editor';
+            
+            pre.addEventListener('click', () => {
+                editor.value = code;
+                updateEditorHighlighting();
+                
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelector('[data-tab="code-tab"]').classList.add('active');
+                document.getElementById('code-tab').classList.add('active');
+                
+                editor.focus();
+                placeCaretAtEnd(editor);
+            });
+        }
+    });
+}
+
+function setupRevealCodeButtons() {
+    document.querySelectorAll('.reveal-code-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const example = this.closest('.example');
+            const codeBlock = example.querySelector('.bf-code');
+            
+            codeBlock.style.display = 'block';
+            this.style.display = 'none';
+            
+            const originalCode = codeBlock.textContent || codeBlock.innerText;
+            codeBlock.innerHTML = highlightSyntax(originalCode);
+            
+            if (!originalCode.includes('(Not yet solved')) {
+                codeBlock.style.cursor = 'pointer';
+                codeBlock.title = 'Click to load this example into the editor';
+                
+                codeBlock.addEventListener('click', () => {
+                    editor.value = originalCode;
+                    updateEditorHighlighting();
+                    
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                    document.querySelector('[data-tab="code-tab"]').classList.add('active');
+                    document.getElementById('code-tab').classList.add('active');
+                    
+                    editor.focus();
+                    placeCaretAtEnd(editor);
+                });
+            }
+        });
+    });
+}
+
 function setUp() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -260,11 +387,47 @@ function setUp() {
         });
     });
 
-    editor.addEventListener('input', updateEditorHighlighting);
-    editor.addEventListener('paste', e => {
-        e.preventDefault();
-        const text = (e.clipboardData || window.clipboardData).getData('text');
-        document.execCommand('insertText', false, text);
+    const debouncedHighlighting = debounce(updateEditorHighlighting, 50);
+    
+    editor.addEventListener('input', debouncedHighlighting);
+    
+    editor.addEventListener('paste', () => {
+        setTimeout(debouncedHighlighting, 0);
+    });
+
+    editor.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            if (!isRunning) {
+                resetState();
+                const code = editor.value || '';
+                runBrainfuck(code, gameModeToggle.checked);
+            }
+        }
+        
+        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            resetState();
+        }
+        
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            
+            if (e.shiftKey) {
+                const beforeTab = editor.value.lastIndexOf('\t', start - 1);
+                if (beforeTab !== -1 && beforeTab === start - 1) {
+                    editor.value = editor.value.substring(0, start - 1) + editor.value.substring(end);
+                    editor.selectionStart = editor.selectionEnd = start - 1;
+                }
+            } else {
+                editor.value = editor.value.substring(0, start) + '\t' + editor.value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + 1;
+            }
+            
+            updateEditorHighlighting();
+        }
     });
 
     gameModeToggle.addEventListener('change', updateGameModeUI);
@@ -277,8 +440,8 @@ function setUp() {
             runBtn.classList.remove('stop');
             return;
         }
-        resetState();
-        const code = editor.innerText;
+        resetState(false);
+        const code = editor.value || '';
         runBrainfuck(code, gameModeToggle.checked);
     });
 
@@ -287,8 +450,12 @@ function setUp() {
     });
 
     resetState();
-    editor.innerHTML = '';
-    updateEditorHighlighting();
+    
+    editor.value = '';
+    
+    setTimeout(() => {
+        updateEditorHighlighting();
+    }, 100);
 
     for (let i = 0; i < 256; i++) {
         const sw = document.createElement('span');
@@ -301,6 +468,15 @@ function setUp() {
         sw.style.border = '1px solid #181818';
         colorLegendGrid.appendChild(sw);
     }
+
+    // Apply syntax highlighting to all pre.bf-code elements
+    highlightBfCodeElements();
+    
+    // Setup click handlers for examples
+    setupExampleClickHandlers();
+    
+    // Setup reveal code buttons
+    setupRevealCodeButtons();
 }
 
 setUp();
